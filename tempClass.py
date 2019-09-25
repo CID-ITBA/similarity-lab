@@ -17,6 +17,7 @@ from os.path import isfile, join
 import pickle
 import operator
 import collections
+import glob
 
 '''
 def validate(matrixes, vocabulary, yearDict):
@@ -35,18 +36,20 @@ class tempName:
         self.vocabulary = dictionary # vocabulario utilizado para generar las matrices
         self.inverseVocab = dict(map(reversed, dictionary.items())) # diccionario inverso del vocabulario
         mypath = "models/{}/{}/".format(model,dataset)
-        onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-        self.cant_slices = len(onlyfiles)-1
-        self.yearDict = {file.split("-")[1][:-4]:int(file.split("-")[0]) for file in onlyfiles if file != "dictionary.pck"}
+        files=glob.glob(mypath+"/*.npy")
+        matrix_files = [f.split(mypath)[1] for f in files]
+
+        self.cant_slices = len(matrix_files)
+        self.yearDict = {file.split("-")[1][:-4]:int(file.split("-")[0]) for file in matrix_files if file != "dictionary.pck"}
         self.matrices = list(range(self.cant_slices))
-        for file in onlyfiles:
+        for file in matrix_files:
             if file != "dictionary.pck":
                 idx=int(file.split("-")[0])
                 self.matrices[idx] = np.load("models/{}/{}/".format(model,dataset)+file)    # matrices de probabilidad de coocurrencia por year
         self.model = model
         self.dataset = dataset
 
-    def findSimilars(self, vector, threshold, year):
+    def findSimilars(self, vector, threshold, year,max_words=None):
         if threshold > 0:
             tempMat = self.matrices[self.yearDict[year]] # obtengo la matriz del anio pedido
             results = {} # container para los resultados encontrados dict{string, sim}
@@ -69,7 +72,7 @@ class tempName:
                 for index, cosSim in mostSimilar:
                     results[ self.inverseVocab[index] ] = cosSim
             results = sorted(results.items(), key = operator.itemgetter(1), reverse = True) #orders the results
-            return results
+            return results[:max_words]
 
         else:
             raise ValueError("Treshold value must be positive")
