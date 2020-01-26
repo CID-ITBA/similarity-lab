@@ -7,7 +7,7 @@ With the aid of this toolset you will be able to track changes of words signific
 ## What's inside?
 
 You'll find two sets of word embedding matrices along with their corresponding vocabularies.
-These matrices were obtained from two major vocabulary corpuses: [The New York Time](https://www.nytimes.com/) and [The Guardian](https://www.theguardian.com/uk).
+These matrices were obtained from two major vocabulary corpuses. Thousand of news articles were used from [The New York Time](https://www.nytimes.com/) and [The Guardian](https://www.theguardian.com/uk).
 
 ## Use cases
 
@@ -39,7 +39,9 @@ You can find examples and documentation at our Read the Docs [site](https://cid-
 We are seeking to expand our word corpuses collection so any good reference to a new source will be appreciated.
 
 ## License
+
 This project is under the MIT license.
+
 ## Meet the Team
 
 | [@cselmo][cselmo-user]                                                                     | [@MT2321][mt2321-user]               | [@PabloSML-user][pablosml-user]      |
