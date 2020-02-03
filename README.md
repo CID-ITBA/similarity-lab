@@ -44,7 +44,7 @@ This project is under the MIT license.
 
 ## Meet the Team
 
-| [@cselmo][cselmo-user]                                                                     | [@MT2321][mt2321-user]               | [@PabloSML-user][pablosml-user]      |
+| [@cselmo][cselmo-user]                                                                     | [@MT2321][mt2321-user]               | [@PabloSML][pablosml-user]      |
 | ------------------------------------------------------------------------------------------ | ------------------------------------ | ------------------------------------ |
 | ![][cselmo-img]                                                                            | ![][mt2321-img]                      | ![][pablosml-img]                    |
 | Memeber of [@CID-ITBA][cid-itba-org] and [@CoNexDat][conexdat-org] for the OpLaDyn project | Memeber of [@CID-ITBA][cid-itba-org] | Memeber of [@CID-ITBA][cid-itba-org] |
