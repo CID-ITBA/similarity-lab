@@ -1,5 +1,6 @@
 from ..data import data_loader as cl
 
+
 class Laboratory:
     def __init__(self, matrices, year_dict, vocabularies):
         pass
@@ -38,4 +39,4 @@ class Laboratory:
             if 'treshold' is a negative floating point number, or it's value is greater than 1.0.
             if 'year' is not present in the current data.
         """
-        # print("hola lab tools")
+        pass

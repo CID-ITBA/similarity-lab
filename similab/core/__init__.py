@@ -1,2 +1,2 @@
-from .lab_tools import *
+from .lab_tools import Laboratory
 
