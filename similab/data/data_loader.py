@@ -96,6 +96,10 @@ def load_model(model="dw2v", corpus="nyt", path=None, update=False):
                         with open(model_path.joinpath(file), "rb") as f:
                             word_index = pickle.load(f)
                             loaded_model.set_word_index(word_index)
+                    elif "slices" in file:
+                        with open(model_path.joinpath(file), "rb") as f:
+                            slices = pickle.load(f)
+                            loaded_model.set_slices(slices)
                     elif "testset" in file:
                         testset = pd.read_csv(model_path.joinpath(file))
                         loaded_model.add_test(testset)

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Model:
     """
     This Model class contains and preprocess the requested dataset
@@ -31,16 +32,27 @@ class Model:
         self.tests.append(tests)
 
     def get_embedding(self):
-        # Create the embeddings matrices
-        embs = list()
-        year_dict = dict()
-        vocabularies = list()
-        for idx, slc in enumerate(self.slices):
-            mask = np.array(self.sampling_tables[slc]) != 0
-            embs.append((self.mean + self.deltas[slc])[mask, :])
-            year_dict[slc] = idx
-            vocabulary = np.array(list(self.word_index.keys()))[mask]
-            vocabulary = {word: index for index, word in enumerate(vocabulary)}
-            vocabularies.append(vocabulary)
+        """
+        Preprocess mean and delta matrices to produce the embedding matrics
+        and its corresponding vocabularies per slice
 
-        return embs, year_dict, vocabularies
+        Returns
+        -------
+
+        """
+        # Create the embeddings matrices
+        if self.mean is not None and self.deltas is not None and self.word_index is not None:
+            embs = list()
+            year_dict = dict()
+            vocabularies = list()
+            for idx, slc in enumerate(self.slices):
+                mask = np.array(self.sampling_tables[slc]) != 0
+                embs.append((self.mean + self.deltas[slc])[mask, :])
+                year_dict[slc] = idx
+                vocabulary = np.array(list(self.word_index.keys()))[mask]
+                vocabulary = {word: index for index, word in enumerate(vocabulary)}
+                vocabularies.append(vocabulary)
+
+            return embs, year_dict, vocabularies
+        else:
+            return None
