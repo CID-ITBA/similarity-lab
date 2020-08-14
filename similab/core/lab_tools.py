@@ -1,35 +1,58 @@
-from ..data import data_loader as cl
 from ..data.model_ds import Model
+
 from scipy import spatial
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
-from matplotlib.patches import Rectangle
+import matplotlib.pyplot as plt
+
 from scipy.interpolate import make_interp_spline, BSpline
-from spherecluster import SphericalKMeans
-from sklearn.metrics import normalized_mutual_info_score
-from sklearn.metrics import fbeta_score
+
+
+# from spherecluster import SphericalKMeans
+# from sklearn.metrics import normalized_mutual_info_score
+# from sklearn.metrics import fbeta_score
 
 
 class Laboratory:
+    """
+    Examples
+    --------
+    >>> import similab as sm
+    >>> nyt_model = sm.load_model(model="dw2v", corpus="nyt")
+    >>> lab = sm.Laboratory(nyt_model)
+    """
     def __init__(self, model: Model, matrices=None, year_dict=None, vocabularies=None):
-        if type(model) is Model:
-            matrices, year_dict, vocabularies = model.get_embedding()
-            self.vocabularies = vocabularies # Vocabularies per slice
-            self.inverseVocab = []
-            # Create inverse vocabularies
-            for vocabulary in vocabularies:
-                self.inverseVocab.append(dict(map(reversed, vocabulary.items())))
-            self.matrices = matrices  # embedding matrices per slice
-            self.year_dict = year_dict  # Year matrix index
-            self.matrices_norm = list()
-            # Normalize matrices to increase performance
-            for matrix in self.matrices:
-                self.matrices_norm.append((matrix.T / np.linalg.norm(matrix, axis=-1)).T)
-            self.projectionFlag = False
+        """
+        Parameters
+        ----------
+        model
+        matrices
+        year_dict
+        vocabularies
+        """
+        if isinstance(model, Model):
+            self.matrices, self.year_dict, self.vocabularies = model.get_embedding()
+        elif all(v for v in [matrices, year_dict, vocabularies]):
+            self.matrices = matrices
+            self.year_dict = year_dict
+            self.vocabularies = vocabularies
+        else:
+            print("Model arguments are invalid")
 
-    # def similars2vec(self, vector, year, threshold=0, max_words=None):
-    #     """
+        self.inverse_vocabs = []
+        # Create inverse vocabularies
+        for vocabulary in self.vocabularies:
+            reversed_vocabulary = {value: key for (key, value) in vocabulary.items()}
+            self.inverse_vocabs.append(reversed_vocabulary)
+
+        self.matrices_norm = list()
+        # Normalize matrices to increase performance
+        for matrix in self.matrices:
+            self.matrices_norm.append((matrix.T / np.linalg.norm(matrix, axis=-1)).T)
+        self.projection_flag = False
+
+    def find_similars2vec(self, vector, year, threshold=0, max_words=None):
+        """
     #     Searches for the most similar words within a word2vec embedding matrix.
     #
     #     Looks for the most similar words within a word2vec embedding matrix.
@@ -61,69 +84,19 @@ class Laboratory:
     #     ValueError
     #         if 'treshold' is a negative floating point number, or it's value is greater than 1.0.
     #         if 'year' is not present in the current data.
-    #     """
-    #     pass
-
-    def findSimilars2Vec(self, vector, year, threshold=0, maxWords=None):
-        """
-        Finds the most similar words within a word2vec embedding matrix.
-        This function computes the cosine similarities between embedding vectors
-        and a given vector. Returning the most similar words within a given treshold.
-
-        Parameters
-        --------
-        vector : array_like
-            Input Vector. Must match embedding dimension.
-        year : int
-            Choosen year.
-        threshold : float
-            Minimun cosine similarity allowed to consider a word 'close' to the given vector.
-            If left blank, the default value is 0, which allows for all vectors to be considered.
-        maxWords : int
-            Maximum number of words to be returned as most similar.
-            If left blank, the default value is 'None', which allows for all vectors to be considered.
-
-        Returns
-        -------
-        out : dict
-            A dictionary containing the words found and its
-            cosine similarities with respect to given input vector.
-        Raises
-        ------
-        ValueError
-            if 'treshold' is a negative floating point number, or it's value is greater than 1.0.
-            if 'year' is not present in the current data.
-
-        Examples
-        --------
-        >>> ma = [[-1,-2,-3],[4,5,6],[7,8,9]]
-        >>> mb = [[1,2.1,3],[4.2,4.8,6],[7.02,8,9.3]]
-        >>> mc = [[1.1,2.2,3.1],[4.23,5,6],[7.03,8,9.32]]
-
-        >>> matrices = [ma, mb, mc]
-        >>>.year_dict = {1990:0, 1991:1, 1995:2}
-        >>> vocab1990 = {'martin':0, 'pablo':1, 'carlos':2}
-        >>> vocabularies = [vocab1990]
-
-        >>> tempObject = tempName(matrices,.year_dict, vocabularies)
-
-        >>> newVec = tempObject.findSimilars([1,2,3], 3, 1990)
-
-        >>> print(newVec)
-
-        >>> {'pablo': 0.9746318461970761, 'carlos': 0.9594119455666702, 'martin': -1.0}
 
         """
-        if threshold >= 0.0 and threshold < 1.0:
-            yearIndex = self.year_dict.get(year, -1)  # obtengo el indice del año, si no esta el año devuelve -1
-            if (yearIndex != -1):
-                tempMat = self.matrices_norm[yearIndex]  # obtengo la matriz del año pedido
+
+        if 0.0 <= threshold < 1.0:
+            year_index = self.year_dict.get(year, -1)  # Obtengo el indice del año, si no esta el año devuelve -1
+            if year_index != -1:
+                temp_mat = self.matrices_norm[year_index]  # Get the matrix corresponding to the given slice
                 vector_norm = vector / np.linalg.norm(vector)
-                cosSims = np.dot(tempMat, vector_norm)
-                indexes = cosSims.argsort()[::-1][0:maxWords]
-                cosSims = cosSims[indexes][0:maxWords]
-                results = {self.inverseVocab[yearIndex][index]: cosSims[res_nbr] for res_nbr, index in
-                           enumerate(indexes) if cosSims[res_nbr] > threshold}
+                cos_sims = np.dot(temp_mat, vector_norm)
+                indexes = cos_sims.argsort()[::-1][0:max_words]
+                cos_sims = cos_sims[indexes][0:max_words]
+                results = {self.inverse_vocabs[year_index][index]: cos_sims[res_nbr] for res_nbr, index in
+                           enumerate(indexes) if cos_sims[res_nbr] > threshold}
                 return results
 
             else:
@@ -175,7 +148,7 @@ class Laboratory:
 
         """
         vector = self.getVector(word, year)
-        similars = self.findSimilars2Vec(vector, year, threshold, maxWords)
+        similars = self.find_similars2vec(vector, year, threshold, maxWords)
 
         return similars
 
@@ -222,8 +195,6 @@ class Laboratory:
         #         #     [4, 5, 6]
 
         """
-        print(self.year_dict)
-        print(year)
 
         yearIndex = self.year_dict.get(year, -1)  # obtengo el indice del año, si no esta el año devuelve -1
         print(yearIndex)
@@ -244,7 +215,7 @@ class Laboratory:
     # Esta funcion devuelve un vector de ceros de tamaño segun el año seleccionado. ES PROVISIONAL Y SUJETA A SER ELIMINADA, SE UTILIZA EN EL SIGUIENTE METODO
     def getZeroVector(self, year):
         yearIndex = self.year_dict.get(year, -1)
-        if (yearIndex != -1):
+        if yearIndex != -1:
             tempMat = self.matrices[yearIndex]  # obtengo la matriz del año pedido
             exampleVector = tempMat[0]
             zeroVector = np.zeros_like(exampleVector)
@@ -276,20 +247,20 @@ class Laboratory:
         --------
         """
 
-        if (isinstance(positives, str)):
+        if isinstance(positives, str):
             vector = self.getVector(positives, year)
 
         else:
             vector = self.getZeroVector(year)
 
-            if (isinstance(positives, list) and isinstance(negatives, list)):
+            if isinstance(positives, list) and isinstance(negatives, list):
                 for word in positives:
                     vector += self.getVector(word, year)
 
                 for word in negatives:
                     vector -= self.getVector(word, year)
 
-            elif (isinstance(positives, dict) and isinstance(negatives, dict)):
+            elif isinstance(positives, dict) and isinstance(negatives, dict):
                 for word in positives:
                     vector += self.getVector(word, positives[word])
 
@@ -311,16 +282,16 @@ class Laboratory:
 
         resultList = []
         vector = self.getVectorPosNeg(positives, negatives, year)
-        if (isinstance(yearOut, int)):
-            resultList[0] = self.findSimilars2Vec(vector, yearOut, threshold, maxWords)
-        elif (isinstance(yearOut, list)):
+        if type(yearOut) is int:
+            resultList[0] = self.find_similars2vec(vector, yearOut, threshold, maxWords)
+        elif type(yearOut) is list:
             for index, eachYear in yearOut:
-                resultList[index] = self.findSimilars2Vec(vector, eachYear, threshold, maxWords)
-        elif (isinstance(yearOut, None)):
+                resultList[index] = self.find_similars2vec(vector, eachYear, threshold, maxWords)
+        elif type(yearOut) is None:
             for index, eachYear in self.year_dict:
-                resultList[index] = self.findSimilars2Vec(vector, eachYear, threshold, maxWords)
+                resultList[index] = self.find_similars2vec(vector, eachYear, threshold, maxWords)
 
-        if (plotWords != None):
+        if plotWords is not None:
             print("Aca ira el plotteo y/o guardado del grafico")
 
         return resultList
@@ -400,6 +371,7 @@ class Laboratory:
             If the word is missing from one of the two compared years, 'missing'
             is returned in the list's corresponding position.
         """
+        print("hola")
         evolution = []
         yearQuantity = len(self.year_dict)
 
@@ -407,9 +379,9 @@ class Laboratory:
 
             mat1 = self.matrices[yearIndex]
             vocab1 = self.vocabularies[yearIndex]
-            wordIndex1 = vocab1.get(word, -1)
-            if (
-                    wordIndex1 == -1):  # si la palabra no esta en el año, se saltea esta comparacion (nunca sucede si proyecta)
+            # wordIndex1 = vocab1.get(word, -1)
+            if wordIndex1 := vocab1.get(word,
+                                        -1) == -1:  # si la palabra no esta en el año, se saltea esta comparacion (nunca sucede si proyecta)
                 evolution.append('missing')
                 continue
             vector1 = mat1[wordIndex1]
@@ -417,7 +389,7 @@ class Laboratory:
             mat2 = self.matrices[yearIndex + 1]
             vocab2 = self.vocabularies[yearIndex + 1]
             wordIndex2 = vocab2.get(word, -1)
-            if (wordIndex2 == -1):
+            if wordIndex2 == -1:
                 evolution.append('missing')
                 continue
             vector2 = mat2[wordIndex2]
@@ -451,7 +423,7 @@ class Laboratory:
                 self.matrices[yearIndex + 1].append(vector)
                 self.vocabularies[yearIndex + 1][key] = len(self.matrices[yearIndex + 1]) - 1
 
-        self.projectionFlag = True
+        self.projection_flag = True
 
     def checkProjection(self):
         """
@@ -468,7 +440,7 @@ class Laboratory:
             False if the matrices are not projected.
             True if the matrices are projected.
         """
-        return self.projectionFlag
+        return self.projection_flag
 
     def sim_tests(self, tests_file, n_neighbors=[1, 3, 5, 10]):
         output = []
@@ -513,33 +485,33 @@ class Laboratory:
                 return n + 1
         return 1e4
 
-    def cluster_test(self, test_file, clusters=10):
-        df_test1 = pd.read_csv(test_file)
-        output = {}
-        for K in clusters:
-            vectors = list()
-            y_true = list()
-            sections = dict()
-            idx = 0
-            for word, section, y in df_test1.values:
-                sliceIdx = self.year_dict[str(y)]
-                if word in self.vocabularies[sliceIdx]:
-                    if section not in sections:
-                        sections[section] = idx
-                        idx += 1
-                    y_true.append(sections[section])
-                    vectors.append(self.matrices_norm[sliceIdx][self.vocabularies[sliceIdx][word]])
-            skm = SphericalKMeans(n_clusters=K, max_iter=100000)
-            skm.fit(np.array(vectors))
-            metric = normalized_mutual_info_score(skm.predict(np.array(vectors)), y_true,
-                                                  average_method='arithmetic')
-            y_true_bool = [(triplet1 == triplet2) for triplet2 in y_true for triplet1 in y_true]
-            y_pred = skm.predict(np.array(vectors))
-            y_pred_bool = [(triplet1 == triplet2) for triplet2 in y_pred for triplet1 in y_pred]
-            metric2 = fbeta_score(y_true_bool, y_pred_bool, beta=5)
-            output[f'NMI({K})'] = metric
-            output[f'F_beta-score({K})'] = metric2
-        return output
+    # def cluster_test(self, test_file, clusters=10):
+    #     df_test1 = pd.read_csv(test_file)
+    #     output = {}
+    #     for K in clusters:
+    #         vectors = list()
+    #         y_true = list()
+    #         sections = dict()
+    #         idx = 0
+    #         for word, section, y in df_test1.values:
+    #             sliceIdx = self.year_dict[str(y)]
+    #             if word in self.vocabularies[sliceIdx]:
+    #                 if section not in sections:
+    #                     sections[section] = idx
+    #                     idx += 1
+    #                 y_true.append(sections[section])
+    #                 vectors.append(self.matrices_norm[sliceIdx][self.vocabularies[sliceIdx][word]])
+    #         skm = SphericalKMeans(n_clusters=K, max_iter=100000)
+    #         skm.fit(np.array(vectors))
+    #         metric = normalized_mutual_info_score(skm.predict(np.array(vectors)), y_true,
+    #                                               average_method='arithmetic')
+    #         y_true_bool = [(triplet1 == triplet2) for triplet2 in y_true for triplet1 in y_true]
+    #         y_pred = skm.predict(np.array(vectors))
+    #         y_pred_bool = [(triplet1 == triplet2) for triplet2 in y_pred for triplet1 in y_pred]
+    #         metric2 = fbeta_score(y_true_bool, y_pred_bool, beta=5)
+    #         output[f'NMI({K})'] = metric
+    #         output[f'F_beta-score({K})'] = metric2
+    #     return output
 
     def plotEvo(self, ref_word, ref_year, maxWords=10, tracked_words=[], figsize=(13, 8), file=False):
         vector = self.getVector(ref_word, ref_year)
@@ -549,7 +521,7 @@ class Laboratory:
         ax = plt.gca()
         tracks = {word: {'x': list(), 'y': list()} for word in tracked_words}
         for row, year in enumerate(self.year_dict):
-            sims = self.findSimilars2Vec(vector, year, maxWords=maxWords)
+            sims = self.find_similars2vec(vector, year, max_words=maxWords)
             for col, word in enumerate(sims):
                 c = word_colors.get(word, "k")
                 if word in tracked_words:

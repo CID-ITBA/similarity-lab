@@ -150,5 +150,10 @@ $RECYCLE.BIN/
 
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,pycharm,visualstudiocode,linux
+./dist
 *.gz
 *.whl
+
+# Testing
+./models
+./similab/evo_war.pdf

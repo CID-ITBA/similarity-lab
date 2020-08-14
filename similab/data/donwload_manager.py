@@ -32,25 +32,22 @@ def download_data(model="dw2v", corpus="nyt", path=None, update=False):
         ans = input(f"The path given is {path}"
                     f"\nDo want to proceed Y/N: ")
         if str.strip(ans) in "yYyesYes":
-            models_path = root
+            models_path = root.joinpath('models')
         else:
             print("Download aborted")
             return False
     # If no path is provided data will be downloaded in the package directory under models
     else:
-        # Use current working directory to downlaod the models
-        models_path = Path(cts.DONWLOAD_PATH)
-        print(models_path)
+        models_path = Path(cts.DONWLOAD_PATH)  # Use current working directory to downlaod the models
 
     Path.mkdir(models_path, exist_ok=True)
-    # Create 'the model' specific directory
-    model_path = models_path.joinpath(corpus)
+    model_path = models_path.joinpath(corpus)  # Create 'the model' specific directory
     Path.mkdir(model_path, exist_ok=True)
-    # Download and write data to folder
-    data_url = cts.DATA_URL_PATH + str.upper(corpus)
+    data_url = cts.DATA_URL_PATH + str.upper(corpus)  # Download and write data to folder
 
     download_status = None
-    # Se necesita un esquema de nombres más consistente
+
+    # TODO: Se necesita un esquema de nombres más consistente
     # TODO: refactor to take into acount different model type
     if corpus == "nyt":
         for file in tqdm(cts.NYT_MODEL_FILES):
@@ -64,7 +61,7 @@ def download_data(model="dw2v", corpus="nyt", path=None, update=False):
                     res = requests.get(file_url, stream=True)
                     download_status = res.status_code
                 else:
-                    break  # Everything fine
+                    break
             if download_status != requests.codes["all_good"]:
                 print(f"Download of file {file} failed. Error code {download_status} ")
                 return False
