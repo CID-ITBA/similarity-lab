@@ -2,7 +2,7 @@
 name = "similab"
 version = "0.1.0"
 description = ""
-authors = ["MT2321 <mrodriguez@itba.edu.ar>"]
+authors = ["CID-TIBA"]
 readme = "README.md"
 
 [tool.poetry.dependencies]

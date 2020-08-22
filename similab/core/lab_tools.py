@@ -25,7 +25,7 @@ class Laboratory:
         """
         Parameters
         ----------
-        model
+        model:Model instance
         matrices
         year_dict
         vocabularies
@@ -210,7 +210,7 @@ class Laboratory:
                 raise ValueError("Word not present in selected year's vocabulary")
 
         else:
-            raise ValueError("Year not present")
+            raise ValueError(f"Year: {year} not present")
 
     # Esta funcion devuelve un vector de ceros de tamaño segun el año seleccionado. ES PROVISIONAL Y SUJETA A SER ELIMINADA, SE UTILIZA EN EL SIGUIENTE METODO
     def getZeroVector(self, year):
@@ -371,7 +371,6 @@ class Laboratory:
             If the word is missing from one of the two compared years, 'missing'
             is returned in the list's corresponding position.
         """
-        print("hola")
         evolution = []
         yearQuantity = len(self.year_dict)
 
@@ -379,9 +378,8 @@ class Laboratory:
 
             mat1 = self.matrices[yearIndex]
             vocab1 = self.vocabularies[yearIndex]
-            # wordIndex1 = vocab1.get(word, -1)
-            if wordIndex1 := vocab1.get(word,
-                                        -1) == -1:  # si la palabra no esta en el año, se saltea esta comparacion (nunca sucede si proyecta)
+            wordIndex1 = vocab1.get(word, -1)
+            if wordIndex1 == -1:  # si la palabra no esta en el año, se saltea esta comparacion (nunca sucede si proyecta)
                 evolution.append('missing')
                 continue
             vector1 = mat1[wordIndex1]
@@ -472,7 +470,6 @@ class Laboratory:
             idx_y1 = self.year_dict[y1]
             idx_y2 = self.year_dict[y2]
             if w1 in self.vocabularies[idx_y1] and w2 in self.vocabularies[idx_y2]:
-                #                 print(w1,w2)
                 idx1 = self.vocabularies[idx_y1][w1]
                 idx2 = self.vocabularies[idx_y2][w2]
                 v1 = self.matrices_norm[idx_y1][idx1]
@@ -514,6 +511,30 @@ class Laboratory:
     #     return output
 
     def plotEvo(self, ref_word, ref_year, maxWords=10, tracked_words=[], figsize=(13, 8), file=False):
+        """
+        Track the evolution of words significance accros the years
+
+        Parameters
+        ----------
+        ref_word
+        ref_year
+        maxWords
+        tracked_words
+        figsize
+        file
+
+        Returns
+        -------
+
+        Examples
+        -------
+        >>>import similab as sm
+        >>>m1 = sm.load_model(model="dw2v",corpus="nyt", path="my_path")
+        >>>lab1 = sm.Laboratory(m1)
+        >>>print()
+        >>>
+        >>>
+        """
         vector = self.getVector(ref_word, ref_year)
         colors = "rbgcym"
         word_colors = {word: colors[idx] for idx, word in enumerate(tracked_words)}

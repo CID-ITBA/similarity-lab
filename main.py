@@ -3,7 +3,7 @@ import similab as sm
 sm.load_model()
 m1 = sm.load_model(model="dw2v", corpus="nyt")
 lab1 = sm.Laboratory(m1)
-lab1.findSimilars2Word("bush",1990,maxWords=10)
+print(lab1.findSimilars2Word("bush", '1990', maxWords=10))
 ref_word = "burger"
 ref_year = "1990"
 maxWords = 10
